@@ -9,10 +9,12 @@ import math
 def redondear(numero,decimales):
     
     num_decimales = math.pow(10,decimales)
-    numero=numero * num_decimales 
+    if decimales > 0:
+        numero=numero * num_decimales 
     numero=numero + 0.5
     numero=(int)(numero) # también se puede usar floor(numero)
-    numero=numero / num_decimales
+    if decimales > 0:
+        numero=numero / num_decimales
 
     return numero
 
