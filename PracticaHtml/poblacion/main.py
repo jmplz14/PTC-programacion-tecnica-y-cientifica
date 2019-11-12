@@ -9,6 +9,7 @@ Created on Fri Nov  8 15:56:53 2019
 import numpy as np
 import locale
 import math
+from bs4 import BeautifulSoup
 
 
 locale.setlocale(locale.LC_ALL,'')
@@ -153,15 +154,137 @@ def obtenerDiccVariacion(diccDatos,tipo):
     return diccDatosVarRelativa, diccDatosVarAbsoluta
         
         
+"""Generado apartir de R2"""
+def diccComunidadesProvinciasHtml():
+    numColumnas = 4
+    comunidadesFich = open('comunidadesAutonomas.htm', 'r', encoding="ISO-8859-1")
+    provinciasFich = open('comunidadAutonoma-Provincia.htm', 'r', encoding="ISO-8859-1")
+    
+    comString = comunidadesFich.read()
+    provString = provinciasFich.read()
+    
+    
+    soup = BeautifulSoup(comString, 'html.parser')
+    valores = soup.find_all('td')
+    
+    diccNombresComunidad = {}
+    diccProvinciasComunidad = {}
+    
+    for i in range(0,len(valores)//2):
+        pos = i * 2
+        
+        codigo = valores[pos].get_text()
+        codigo = codigo[:-1]
+        nombre = valores[pos+1].get_text()
+        
+        diccNombresComunidad.update({codigo: nombre})
+        
+        diccProvinciasComunidad.update({codigo: {}})
+    
+
+    
+    soup = BeautifulSoup(provString, 'html.parser')
+    valores = soup.find_all('td')
+    
+    #ciudadesAutonomas = valores[50 * numColumnas + 3:]
+    for i in range(3):
+        valores.pop(50 * numColumnas)
+        
+    #valores = valores[:50 * numColumnas]
+    
+    
+    #print(valores[50 * 4])
+    
+    for i in range(0,len(valores)//4):
+        pos = i * 4
+        codigoComunidad = valores[pos].get_text()
+        codigoComunidad = codigoComunidad.replace(" ","")
+        codigoProvincia = valores[pos+2].get_text()
+        codigoProvincia = codigoProvincia.replace(" ","")
+        nombreProvincia = valores[pos+3].get_text()
+        #print(i)
+        valoresComunidad = diccProvinciasComunidad[codigoComunidad]
+        #print(valoresComunidad)
+        valoresComunidad.update({codigoProvincia:nombreProvincia})
+        #print(valoresComunidad)
+        
+        diccProvinciasComunidad.update({codigoComunidad: valoresComunidad} )
+        
+    #print(diccProvinciasComunidad)
+  
+    return diccNombresComunidad, diccProvinciasComunidad
+
+def sumarArrayStringYNumpi(strings,numeros):
+    stringNumerico = np.array(strings)
+    stringNumerico = stringNumerico.astype(np.float)
+    return numeros + stringNumerico
+          
+def generarDiccComunidades(diccDatos,diccProvinciasComunidad):
+    diccDatosComunidades = {}
+    
+    for codComunidad in diccProvinciasComunidad:
+        
+        
+        datosTotales = {"Totales":np.zeros(8),"Hombres":np.zeros(8),"Mujeres":np.zeros(8),}
+        for codProvincia in diccProvinciasComunidad[codComunidad]:
+            datosProvincia = diccDatos[codProvincia]
+            
+            suma = sumarArrayStringYNumpi(datosProvincia["Totales"],datosTotales["Totales"])
+            datosTotales["Totales"] = suma
+            
+            suma = sumarArrayStringYNumpi(datosProvincia["Hombres"],datosTotales["Hombres"])
+            datosTotales["Hombres"] = suma
+            
+            suma = sumarArrayStringYNumpi(datosProvincia["Mujeres"],datosTotales["Mujeres"])
+            datosTotales["Mujeres"] = suma
+            
+        
+        diccDatosComunidades.update({codComunidad: datosTotales})
+        
+    return diccDatosComunidades
+            
+            
+            
+            
+def obtenerStringCsvNumpy(valores):
+    stringCsv = ""
+    for valor in valores:
+        stringCsv += "{};".format(str(valor))
+    return stringCsv
 
             
      
+def R2(diccDatos,diccNombresComunidades,diccProvinciasComunidad):
+    diccDatosComunidades = generarDiccComunidades(diccDatos,diccProvinciasComunidad)
+    stringCsv = ";"
+    cabecera = ["2017","2016","2015","2014","2013","2012","2011"]
+    for i in range(3):
+        for año in cabecera:
+            stringCsv += "{};".format(año)
+            
+    for codComunidad in diccDatosComunidades:
+        stringCsv += "\n"
+        stringCsv += "{} {};".format(codComunidad, diccNombresComunidades[codComunidad])
+        
+        valores = diccDatosComunidades[codComunidad]
+        stringCsv += obtenerStringCsvNumpy(valores["Totales"])
+        stringCsv += obtenerStringCsvNumpy(valores["Hombres"])
+        stringCsv += obtenerStringCsvNumpy(valores["Mujeres"])
+        
+    print(stringCsv)
+        
+            
+        
     
+    #diccProvinciasComunidades = diccProvinciasComunidadesHtml(diccNombresComunidades)
         
 
 def main():
     diccDatos, diccNombres = cargarDiccionarioCsv()
-    R1(diccDatos, diccNombres, 2017)
+    #R1(diccDatos, diccNombres, 2017)
+    
+    diccNombresComunidades, diccProvinciasComunidad, = diccComunidadesProvinciasHtml()
+    R2(diccDatos,diccNombresComunidades,diccProvinciasComunidad)
     
 
     

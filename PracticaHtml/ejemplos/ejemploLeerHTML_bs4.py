@@ -22,6 +22,7 @@ from bs4 import BeautifulSoup
         
 comunidadesFich=open('comunidadesAutonomas.htm', 'r', encoding="ISO-8859-1")
 
+
 comString=comunidadesFich.read()
 
 soup = BeautifulSoup(comString, 'html.parser')
