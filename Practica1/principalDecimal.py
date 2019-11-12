@@ -16,25 +16,63 @@ def calcularCapitalFinal(capitalInicial, interes):
 
 
 
-while(True):
-    cantidad = Decimal(input("Introduzca una cantidad de euros mayor que 0:"))
-    if cantidad > 0:
-        break
+import financiacion as fc
+def datos(mensaje,rangoInf,rangoSup = None):
+    compro = False
+    while compro == False:
+        
+        try:
+            cantidad = float(input(mensaje))
+            compro = True
+            if rangoSup == None:
+                if not (cantidad > rangoInf and fc.redondear(cantidad,2) == cantidad):
+                    compro = False
 
-while(True):
-    interes = Decimal(input("Introzduzca el porcentaje de interes en el intervalo [100,0): "))
-    if interes <= 100 and interes > 0:
-        break
-    
+            else:
+                if not (cantidad <= rangoSup and cantidad > rangoInf and fc.redondear(cantidad,2) == cantidad):
+                    compro = False
+
+            
+            if not compro:
+                print("Metio un dato no valido")
+                        
+        except:
+            print("Metio un dato no valido")
+            compro = False
+    return Decimal(cantidad)
+
+
+
+
+#compro(cantidad,cantidad > 0 and fc.redondear(cantidad,2) == cantidad,)    
+mensaje = "Introduzca una cantidad de euros mayor que 0 y maximo 2 decimales: "
+cantidad = datos(mensaje,0)
+#cantidad = fc.redondear(cantidad,2)
+mensaje = "Introzduzca el porcentaje de interes en el intervalo [100,0) y maximo 2 deciamles: "
+interes = datos(mensaje,0,100)
+
+
+#interes = fc.redondear(interes,2)   
 #interes = interes / 100
-while(True):
-    años = int(input("Introduzca una cantidad de años mayor que 0: "))
-    if años >= 1:
-        break
+
+compro = False
+while compro == False:
+    try:
+        años = int(input("Introduzca una cantidad de años mayor que 0: "))
+        if años >= 1:
+            compro = True
+        else:
+            compro = False
+        if not compro:
+                print("Metio un dato no valido")
+    except:
+        print("Metio un dato no valido")
+        compro = False
+
 cantidadFinal = cantidad
 for i in range(0,años):
     #cantidad_final += cantidad_final * interes
     cantidadFinal = calcularCapitalFinal(cantidadFinal,interes)
-cantidadFinal = cantidadFinal.quantize(Decimal("1.00"))
+    cantidadFinal = cantidadFinal.quantize(Decimal("1.00"))
 
 print("El total final es de: ", cantidadFinal)

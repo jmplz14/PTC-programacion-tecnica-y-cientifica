@@ -24,4 +24,11 @@ def calcularCapitalFinal(capitalInicial, interes):
     total_intereses = capitalInicial * (interes/100)
     capitalFinal = capitalInicial + total_intereses
     return capitalFinal
+
+if __name__ == "__main__":
+    print("Estas ejecutando como main")
+    print(redondear(10.556,2))
+    print(calcularCapitalFinal(10.56,5.33))
     
+if __name__ == "funciones":
+    print("Estas ejecutando como modulo")
