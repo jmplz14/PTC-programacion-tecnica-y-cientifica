@@ -17,6 +17,7 @@ locale.setlocale(locale.LC_ALL,'')
 
 ficheroCsv = "poblacionProvinciasHM2010-17.csv"
 añoInicio = 2017
+añoFinal = 2010
 
 
 def puntosDecimalesFloat(numero):
@@ -73,7 +74,7 @@ def cargarDiccionarioCsv():
         #print(diccionarioNombre)
             #diccionario.update{"Codigo": }
 
-def generarWebAbsolutaRelativa(diccDatos,diccNombres,tipos,titulo,fichero):
+def generarWebAbsolutaRelativa(diccDatos,diccNombres,tipos,titulo,fichero,imagen = None):
     
     numTipos = len(tipos)
     diccVarRelativa, diccVarAbsoluta = obtenerDiccVariacion(diccDatos,tipos)
@@ -102,8 +103,6 @@ def generarWebAbsolutaRelativa(diccDatos,diccNombres,tipos,titulo,fichero):
     numAños = len(cabecera)
     if numTipos > 1:
         cabeceraTipos = """\n\t<tr>\n\t\t<th> </th>"""
-        print(cabeceraTipos)
-        print(tipos)
         for i in tipos:
             cabeceraTipos += """\t<th colspan="{}" >{}</th>""".format(numAños * 2,i)
             
@@ -145,7 +144,11 @@ def generarWebAbsolutaRelativa(diccDatos,diccNombres,tipos,titulo,fichero):
 
     pagina += cuerpoTabla
     
-    pagina += "</table>\n</body>\n</html>"
+    if imagen != None:
+        pagina += """</table>\n<img src="{}">\n""".format(imagen)
+        pagina += "</body>\n</html>"
+    else:
+        pagina += "</table>\n</body>\n</html>"
     
     
     f.write(pagina)
@@ -305,7 +308,7 @@ def generarWebComunidades(diccNombresComunidades,diccDatosComunidades,nombreImag
     f = open('poblacionComAutonomas.html','w', encoding="utf8" )
     
     pagina = """<!DOCTYPE html><html>
-    <head><title>Apartado 1</title>
+    <head><title>Apartado 2 y 3</title>
     <link rel="stylesheet" href="estilo.css">
     <meta charset="utf8"></head>
     <body>
@@ -361,16 +364,13 @@ def obtenerDiccMediaComunidades(diccDatosComunidades,opcion):
     
     return diccMediaComunidades
 
-def crearGraficoR3(diccDatosComunidades,año,nombreGrafico):
+def crearGraficoR3(diccDatosComunidades,mejores,año,nombreGrafico):
     
-    diccMediaComunidad = obtenerDiccMediaComunidades(diccDatosComunidades,"Totales") 
-    mejores = Counter(diccMediaComunidad).most_common(10)
     x,y = zip(* mejores)
     yHombres = []
     yMujeres = []
     posValor = añoInicio - año
-    for i in mejores:
-        codComunidad = i[0]
+    for codComunidad in x:
         yHombres.append(diccDatosComunidades[codComunidad].get("Hombres")[posValor])
         yMujeres.append(diccDatosComunidades[codComunidad].get("Mujeres")[posValor])
         
@@ -388,38 +388,52 @@ def crearGraficoR3(diccDatosComunidades,año,nombreGrafico):
     plt.legend(loc='upper right')
     
     plt.savefig(nombreGrafico)  
+
+
+def R2R3(diccNombresComunidades,diccDatosComunidades,mejores,año):
     
-def R2R3(diccNombresComunidades,diccDatosComunidades):
-    
-    año = 2017;
     nombreGrafico = "graficoPoblacionMedia.jpg";
     
-    crearGraficoR3(diccDatosComunidades,año,nombreGrafico)
-    
-    
-    
-    
-           
-
-    
-    
-    
-
+    crearGraficoR3(diccDatosComunidades,mejores,año,nombreGrafico)
     generarWebComunidades(diccNombresComunidades,diccDatosComunidades,nombreGrafico)
     
-    
-    
-    
-        
-    
     #diccProvinciasComunidades = diccProvinciasComunidadesHtml(diccNombresComunidades)
- 
-def R4(diccDatos,diccNombres):
-    titulo = "Apartado 4 y 5"
-    nombre = "variacionComAutonomas.html"
-    tipos = ["Hombres","Mujeres"]
+
+def crearGraficoR5(diccDatosComunidades,mejores,nombreGrafico,añoElegido):
     
-    generarWebAbsolutaRelativa(diccDatos,diccNombres,tipos,titulo,nombre)
+    x,y = zip(* mejores)
+    numAños = añoInicio-añoElegido +1
+    plt.figure("lineas")
+    años = [añoElegido]
+    añoActual = añoElegido + 1
+    while añoActual <= añoInicio:
+        años.append(añoActual)
+        añoActual += 1
+    for codComunidad in x:
+        valores = diccDatosComunidades[codComunidad].get("Totales")
+        print(valores)
+        valores = np.flip(valores)
+        valores = valores[añoElegido - añoFinal:]
+        print(valores)
+        plt.plot(años,valores[:],label = codComunidad)
+    
+    plt.title("Total de las 10 comunidades con mas media")
+    plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+    plt.xlabel("Años")
+    plt.ylabel("Millones de habitantes")
+    plt.legend(loc='upper right', bbox_to_anchor=(1.15,1))
+    
+    plt.savefig(nombreGrafico) 
+    
+def R4R5(diccDatos,diccNombres,mejores,añoElegido):
+    titulo = "Apartado 4 y 5"
+    nombrePagina = "variacionComAutonomas.html"
+    tipos = ["Hombres","Mujeres"]
+    nombreGrafico = "graficoEvolucionPoblacion.jpg"
+    
+    crearGraficoR5(diccDatos,mejores,nombreGrafico,añoElegido)
+    generarWebAbsolutaRelativa(diccDatos,diccNombres,tipos,titulo,nombrePagina,nombreGrafico)
+    
     
 
 def main():
@@ -430,10 +444,12 @@ def main():
     diccNombresComunidades, diccProvinciasComunidad, = diccComunidadesProvinciasHtml()
     diccDatosComunidades = generarDiccComunidades(diccDatos,diccProvinciasComunidad)
     
+    diccMediaComunidad = obtenerDiccMediaComunidades(diccDatosComunidades,"Totales") 
+    mejores = Counter(diccMediaComunidad).most_common(10)
     
-    R2R3(diccNombresComunidades,diccDatosComunidades)
+    R2R3(diccNombresComunidades,diccDatosComunidades,mejores,2017)
     
-    R4(diccDatosComunidades,diccNombresComunidades);
+    R4R5(diccDatosComunidades,diccNombresComunidades,mejores,2011);
     
     
     
