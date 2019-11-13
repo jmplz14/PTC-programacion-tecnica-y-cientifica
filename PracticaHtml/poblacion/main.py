@@ -73,23 +73,23 @@ def cargarDiccionarioCsv():
         #print(diccionarioNombre)
             #diccionario.update{"Codigo": }
 
+def generarWebAbsolutaRelativa(diccDatos,diccNombres,tipos,titulo,fichero):
     
-def R1(diccDatos, diccNombres):
-    diccVarRelativa, diccVarAbsoluta = obtenerDiccVariacion(diccDatos,"Totales")
-    
-    f = open('variacionProvincias2017-11.html','w', encoding="utf8" )
+    numTipos = len(tipos)
+    diccVarRelativa, diccVarAbsoluta = obtenerDiccVariacion(diccDatos,tipos)
+    f = open(fichero,'w', encoding="utf8" )
     
     pagina = """<!DOCTYPE html><html>
-    <head><title>Apartado 1</title>
+    <head><title>{}</title>
     <link rel="stylesheet" href="estilo.css">
     <meta charset="utf8"></head>
-    <body><h1>Tabla ejercicio 1: variacion por proviencias</h1>
-    <table>"""
+    <body>
+    <table>""".format(titulo)
     
     cabecera = ["2017","2016","2015","2014","2013","2012","2011"]
     
     cabeceraHtml = """\n\t<tr>\n\t\t<th> </th>"""
-    for i in range(2):
+    for i in range(numTipos * 2):
         for i in cabecera:
             cabeceraHtml += """\t<th>{}</th>""".format(i)
     
@@ -98,9 +98,29 @@ def R1(diccDatos, diccNombres):
     pagina += cabeceraHtml
 
    
+
+    numAños = len(cabecera)
+    if numTipos > 1:
+        cabeceraTipos = """\n\t<tr>\n\t\t<th> </th>"""
+        print(cabeceraTipos)
+        print(tipos)
+        for i in tipos:
+            cabeceraTipos += """\t<th colspan="{}" >{}</th>""".format(numAños * 2,i)
+            
+        cabeceraTipos += "\n\t</tr>\n"
+        pagina += cabeceraTipos
+    
+    
     cuerpoTabla = """<tr>
-    <th> </th> <th colspan="{}" >Absoluta</th> <th colspan="{}">Relativa</th> 
-    </tr>\n""".format(len(cabecera),len(cabecera))
+    <th> </th> """ 
+    
+    for i in range(numTipos):
+        cuerpoTabla +="""<th colspan="{0}" >Absoluta</th> <th colspan="{0}">Relativa</th>""".format(numAños)
+        
+    cuerpoTabla += "\n</tr>\n"
+    
+    
+
     for codigo in diccDatos:
         if codigo in diccNombres:
             nombre = diccNombres[codigo];
@@ -109,13 +129,18 @@ def R1(diccDatos, diccNombres):
         columnaTabla = "\t<tr>\n\t\t <td>{} {}</td>".format(codigo,nombre)
         absoluta = diccVarAbsoluta[codigo]
         relativa = diccVarRelativa[codigo]
-        for i in absoluta:
-            columnaTabla += "<td>{}</td>".format(puntosDecimalesInt(i))
-        for i in relativa:
-            columnaTabla += "<td>{}</td>".format(puntosDecimalesFloat(i))
         
+        for posTipo in range(numTipos):
+            for i in range(numAños):
+                pos = posTipo * numAños + i
+                #print(pos)
+                columnaTabla += "<td>{}</td>".format(puntosDecimalesInt(absoluta[pos]))
+            for i in range(numAños):
+                pos = posTipo * numAños + i
+                columnaTabla += "<td>{}</td>".format(puntosDecimalesFloat(relativa[pos]))
+                
         columnaTabla += "\n\t</tr>\n" 
-        
+            
         cuerpoTabla += columnaTabla
 
     pagina += cuerpoTabla
@@ -126,34 +151,54 @@ def R1(diccDatos, diccNombres):
     f.write(pagina)
     f.close
     
+def R1(diccDatos, diccNombres):
+    titulo = "Apartado 1"
+    pagina = "variacionProvincias2017-11.html"
+    tipos = ["Totales"]
+    generarWebAbsolutaRelativa(diccDatos,diccNombres,tipos,titulo,pagina)
+    
+    
+    
     #print(pagina)
  
-def obtenerDiccVariacion(diccDatos,tipo):
+def obtenerDiccVariacion(diccDatos,tipos):
     decimales = 100
     diccDatosVarAbsoluta = {}
     diccDatosVarRelativa = {}
     
-    for dato in diccDatos: 
-        datosActuales = diccDatos[dato];
-        datosActuales = datosActuales[tipo]
-        
-        numElementos = len(datosActuales) - 1
-        
-        datosVarAbsoluta = np.empty(numElementos)
-        datosVarRelativa = np.empty(numElementos)
-        
-        for i in range(numElementos):
-            valorAbsoluta = int(float(datosActuales[i]) - float(datosActuales[i+1]))
-            valorAbsoluta = redondear(valorAbsoluta,decimales)
-            valorRelativa = (valorAbsoluta / float(datosActuales[i+1])) * 100
-            valorRelativa = redondear(valorRelativa,decimales)
-            datosVarAbsoluta[i] = valorAbsoluta
-            datosVarRelativa[i] = valorRelativa
+    for tipo in tipos:
+        for dato in diccDatos: 
+            datosActuales = diccDatos[dato];
+            datosActuales = datosActuales[tipo]
             
+            numElementos = len(datosActuales) - 1
             
-        diccDatosVarAbsoluta.update({dato: datosVarAbsoluta})
-        diccDatosVarRelativa.update({dato: datosVarRelativa}) 
-        
+            datosVarAbsoluta = np.empty(numElementos)
+            datosVarRelativa = np.empty(numElementos)
+            
+            for i in range(numElementos):
+                valorAbsoluta = int(float(datosActuales[i]) - float(datosActuales[i+1]))
+                valorAbsoluta = redondear(valorAbsoluta,decimales)
+                valorRelativa = (valorAbsoluta / float(datosActuales[i+1])) * 100
+                valorRelativa = redondear(valorRelativa,decimales)
+                datosVarAbsoluta[i] = valorAbsoluta
+                datosVarRelativa[i] = valorRelativa
+                
+            if dato in diccDatosVarAbsoluta.keys():
+                valores = np.concatenate((diccDatosVarAbsoluta[dato] ,datosVarAbsoluta))
+                diccDatosVarAbsoluta.update({dato: valores})
+                #print(diccDatosVarRelativa[dato])
+                #print(datosVarRelativa)
+                valores = np.concatenate((diccDatosVarRelativa[dato] ,datosVarRelativa))
+                
+                diccDatosVarRelativa.update({dato: valores})
+                #print(diccDatosVarRelativa[dato])
+                
+            else:
+                diccDatosVarAbsoluta.update({dato: datosVarAbsoluta})
+                diccDatosVarRelativa.update({dato: datosVarRelativa}) 
+                
+                
     return diccDatosVarRelativa, diccDatosVarAbsoluta
         
         
@@ -369,8 +414,12 @@ def R2R3(diccNombresComunidades,diccDatosComunidades):
     
     #diccProvinciasComunidades = diccProvinciasComunidadesHtml(diccNombresComunidades)
  
-def R4():
-    print(R4)
+def R4(diccDatos,diccNombres):
+    titulo = "Apartado 4 y 5"
+    nombre = "variacionComAutonomas.html"
+    tipos = ["Hombres","Mujeres"]
+    
+    generarWebAbsolutaRelativa(diccDatos,diccNombres,tipos,titulo,nombre)
     
 
 def main():
@@ -381,9 +430,10 @@ def main():
     diccNombresComunidades, diccProvinciasComunidad, = diccComunidadesProvinciasHtml()
     diccDatosComunidades = generarDiccComunidades(diccDatos,diccProvinciasComunidad)
     
+    
     R2R3(diccNombresComunidades,diccDatosComunidades)
     
-    R4();
+    R4(diccDatosComunidades,diccNombresComunidades);
     
     
     
