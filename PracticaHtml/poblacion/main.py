@@ -10,11 +10,14 @@ import numpy as np
 import locale
 import math
 from bs4 import BeautifulSoup
-
+from collections import Counter
+import matplotlib.pyplot as plt
 
 locale.setlocale(locale.LC_ALL,'')
 
 ficheroCsv = "poblacionProvinciasHM2010-17.csv"
+añoInicio = 2017
+
 
 def puntosDecimalesFloat(numero):
     return locale.format_string('%.2f', numero, grouping=True)
@@ -71,7 +74,7 @@ def cargarDiccionarioCsv():
             #diccionario.update{"Codigo": }
 
     
-def R1(diccDatos, diccNombres, añoInicio):
+def R1(diccDatos, diccNombres):
     diccVarRelativa, diccVarAbsoluta = obtenerDiccVariacion(diccDatos,"Totales")
     
     f = open('variacionProvincias2017-11.html','w', encoding="utf8" )
@@ -253,7 +256,7 @@ def obtenerStringCsvNumpy(valores):
     return stringCsv
 
             
-def generarWebComunidades(diccNombresComunidades,diccDatosComunidades):
+def generarWebComunidades(diccNombresComunidades,diccDatosComunidades,nombreImagen):
     f = open('poblacionComAutonomas.html','w', encoding="utf8" )
     
     pagina = """<!DOCTYPE html><html>
@@ -297,31 +300,90 @@ def generarWebComunidades(diccNombresComunidades,diccDatosComunidades):
         cuerpoTabla += columnaTabla
 
     pagina += cuerpoTabla
+    pagina += """</table>\n<img src="{}">\n""".format(nombreImagen)
+    pagina += "</body>\n</html>"
     
     
     
     f.write(pagina)
     f.close
+
+def obtenerDiccMediaComunidades(diccDatosComunidades,opcion):
+    diccMediaComunidades = {}
+    for codComunidad in diccDatosComunidades:
+        media = np.mean(diccDatosComunidades[codComunidad].get(opcion))
+        diccMediaComunidades.update({codComunidad: media})
+    
+    return diccMediaComunidades
+
+def crearGraficoR3(diccDatosComunidades,año,nombreGrafico):
+    
+    diccMediaComunidad = obtenerDiccMediaComunidades(diccDatosComunidades,"Totales") 
+    mejores = Counter(diccMediaComunidad).most_common(10)
+    x,y = zip(* mejores)
+    yHombres = []
+    yMujeres = []
+    posValor = añoInicio - año
+    for i in mejores:
+        codComunidad = i[0]
+        yHombres.append(diccDatosComunidades[codComunidad].get("Hombres")[posValor])
+        yMujeres.append(diccDatosComunidades[codComunidad].get("Mujeres")[posValor])
+        
+    X = np.arange(len(yHombres))
+    
+    plt.figure("barras")
+    plt.title("Población de las 10 comunidades con más población media")
+    plt.barh(X + 0.4, yMujeres, color = "g", height = 0.4, label = "Mujeres")
+    plt.barh(X + 0.00, yHombres, color = "b", height = 0.4, label = "Hombres")
+    #plt.bar(X + 0.50, datos[2], color = "r", width = 0.25)
+    plt.yticks(X, x)
+    plt.ticklabel_format(style='sci', axis='x', scilimits=(0,0))
+    plt.xlabel("Millones de Habitantes")
+    plt.ylabel("Códicgo de Comunidad Autónoma")
+    plt.legend(loc='upper right')
+    
+    plt.savefig(nombreGrafico)  
     
 def R2R3(diccNombresComunidades,diccDatosComunidades):
-    generarWebComunidades(diccNombresComunidades,diccDatosComunidades)
     
-        
-            
+    año = 2017;
+    nombreGrafico = "graficoPoblacionMedia.jpg";
+    
+    crearGraficoR3(diccDatosComunidades,año,nombreGrafico)
+    
+    
+    
+    
+           
+
+    
+    
+    
+
+    generarWebComunidades(diccNombresComunidades,diccDatosComunidades,nombreGrafico)
+    
+    
+    
+    
         
     
     #diccProvinciasComunidades = diccProvinciasComunidadesHtml(diccNombresComunidades)
-        
+ 
+def R4():
+    print(R4)
+    
 
 def main():
     diccDatos, diccNombres = cargarDiccionarioCsv()
 
-    R1(diccDatos, diccNombres, 2017)
+    R1(diccDatos, diccNombres)
     
     diccNombresComunidades, diccProvinciasComunidad, = diccComunidadesProvinciasHtml()
     diccDatosComunidades = generarDiccComunidades(diccDatos,diccProvinciasComunidad)
     
     R2R3(diccNombresComunidades,diccDatosComunidades)
+    
+    R4();
     
     
     
