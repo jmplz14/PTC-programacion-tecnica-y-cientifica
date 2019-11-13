@@ -253,25 +253,59 @@ def obtenerStringCsvNumpy(valores):
     return stringCsv
 
             
-     
-def R2(diccDatos,diccNombresComunidades,diccProvinciasComunidad):
-    diccDatosComunidades = generarDiccComunidades(diccDatos,diccProvinciasComunidad)
-    stringCsv = ";"
-    cabecera = ["2017","2016","2015","2014","2013","2012","2011"]
-    for i in range(3):
-        for año in cabecera:
-            stringCsv += "{};".format(año)
-            
-    for codComunidad in diccDatosComunidades:
-        stringCsv += "\n"
-        stringCsv += "{} {};".format(codComunidad, diccNombresComunidades[codComunidad])
+def generarWebComunidades(diccNombresComunidades,diccDatosComunidades):
+    f = open('poblacionComAutonomas.html','w', encoding="utf8" )
+    
+    pagina = """<!DOCTYPE html><html>
+    <head><title>Apartado 1</title>
+    <link rel="stylesheet" href="estilo.css">
+    <meta charset="utf8"></head>
+    <body>
+    <table>"""
+    
+    cabecera = ["2017","2016","2015","2014","2013","2012","2011","2010"]
+    
+    cabeceraHtml = """\n\t<tr>\n\t\t<th> </th>"""
+    for i in range(2):
+        for i in cabecera:
+            cabeceraHtml += """\t<th>{}</th>""".format(i)
+    
+    cabeceraHtml += "\n\t</tr>\n"
+
+    pagina += cabeceraHtml
+
+    cuerpoTabla = """<tr>
+    <th> </th> <th colspan="{0}" >Hombres</th> <th colspan="{0}">Mujeres</th> 
+    </tr>\n""".format(len(cabecera))
+    
+    for codigo in diccDatosComunidades:
+        if codigo in diccNombresComunidades:
+            nombre = diccNombresComunidades[codigo];
+        else:
+            nombre = ""        
         
-        valores = diccDatosComunidades[codComunidad]
-        stringCsv += obtenerStringCsvNumpy(valores["Totales"])
-        stringCsv += obtenerStringCsvNumpy(valores["Hombres"])
-        stringCsv += obtenerStringCsvNumpy(valores["Mujeres"])
+        columnaTabla = "\t<tr>\n\t\t <td>{} {}</td>".format(codigo,nombre)
+        hombres = diccDatosComunidades[codigo].get("Hombres")
+        mujeres = diccDatosComunidades[codigo].get("Mujeres")
+        valores = np.concatenate((hombres,mujeres)) 
         
-    print(stringCsv)
+        for i in valores:
+            columnaTabla += "<td>{}</td>".format(puntosDecimalesInt(i))
+        
+        columnaTabla += "\n\t</tr>\n" 
+        
+        cuerpoTabla += columnaTabla
+
+    pagina += cuerpoTabla
+    
+    
+    
+    f.write(pagina)
+    f.close
+    
+def R2R3(diccNombresComunidades,diccDatosComunidades):
+    generarWebComunidades(diccNombresComunidades,diccDatosComunidades)
+    
         
             
         
@@ -281,10 +315,15 @@ def R2(diccDatos,diccNombresComunidades,diccProvinciasComunidad):
 
 def main():
     diccDatos, diccNombres = cargarDiccionarioCsv()
-    #R1(diccDatos, diccNombres, 2017)
+
+    R1(diccDatos, diccNombres, 2017)
     
     diccNombresComunidades, diccProvinciasComunidad, = diccComunidadesProvinciasHtml()
-    R2(diccDatos,diccNombresComunidades,diccProvinciasComunidad)
+    diccDatosComunidades = generarDiccComunidades(diccDatos,diccProvinciasComunidad)
+    
+    R2R3(diccNombresComunidades,diccDatosComunidades)
+    
+    
     
 
     
