@@ -12,7 +12,6 @@ import math
 from bs4 import BeautifulSoup
 from collections import Counter
 import matplotlib.pyplot as plt
-import itertools
 import os
 locale.setlocale(locale.LC_ALL,'')
 
@@ -28,17 +27,6 @@ def puntosDecimalesFloat(numero):
 def puntosDecimalesInt(numero):
     return locale.format_string('%d', numero, grouping=True)
 
-def redondear(numero,decimales):
-    
-    num_decimales = math.pow(10,decimales)
-    if decimales > 0:
-        numero=numero * num_decimales 
-    numero=numero + 0.5
-    numero=(int)(numero) # también se puede usar floor(numero)
-    if decimales > 0:
-        numero=numero / num_decimales
-
-    return numero
 
 
 def cargarDiccionarioCsv():
@@ -158,7 +146,7 @@ def generarWebAbsolutaRelativa(diccDatos,diccNombres,tipos,titulo,fichero,imagen
     
 def R1(diccDatos, diccNombres):
     titulo = "Apartado 1"
-    pagina = "variacionProvincias2017-11.html"
+    pagina = "variacionProvincias.html"
     tipos = ["Totales"]
     generarWebAbsolutaRelativa(diccDatos,diccNombres,tipos,titulo,pagina)
     
@@ -167,7 +155,6 @@ def R1(diccDatos, diccNombres):
     #print(pagina)
  
 def obtenerDiccVariacion(diccDatos,tipos):
-    decimales = 100
     diccDatosVarAbsoluta = {}
     diccDatosVarRelativa = {}
     
@@ -392,11 +379,10 @@ def crearGraficoR3(diccDatosComunidades,diccNombres,mejores,año,nombreGrafico):
     plt.legend(loc='upper right')
     
     plt.savefig(carpetaDatos + nombreGrafico, bbox_inches='tight')  
+    plt.show ()
 
 
 def R2R3(diccNombresComunidades,diccDatosComunidades,mejores,año,nombreWeb,nombreGrafico):
-    
-    
     
     crearGraficoR3(diccDatosComunidades,diccNombresComunidades,mejores,año,nombreGrafico)
     generarWebComunidades(diccNombresComunidades,diccDatosComunidades,nombreWeb,nombreGrafico)
@@ -430,6 +416,7 @@ def crearGraficoR5(diccDatosComunidades,diccNombres,mejores,nombreGrafico,añoEl
     plt.legend(loc='upper right', bbox_to_anchor=(1.52,1))
     
     plt.savefig(carpetaDatos + nombreGrafico, bbox_inches='tight') 
+    plt.show ()
     
 def R4R5(diccDatos,diccNombres,mejores,añoElegido,nombrePagina,nombreGrafico):
     titulo = "Apartado 4 y 5"
@@ -439,7 +426,7 @@ def R4R5(diccDatos,diccNombres,mejores,añoElegido,nombrePagina,nombreGrafico):
     generarWebAbsolutaRelativa(diccDatos,diccNombres,tipos,titulo,nombrePagina,nombreGrafico)
     
     
-def paginasR6(diccDatos):
+def R6(diccDatos):
     ficheroR6 = "comunidadesAutonomasBis.htm"
     nombreWeb = "poblacionComAutonomasBis.html"
     nombreGrafico = "graficoPoblacionMediaBis.jpg";
@@ -457,16 +444,40 @@ def paginasR6(diccDatos):
     nombreGrafico = "graficoEvolucionPoblacionBis.jpg"
     
     R4R5(diccDatosComunidades,diccNombresComunidades,mejores,2011,nombrePagina,nombreGrafico);
+    
+    comproR6()
 
+def obtenerDatosHtml(pagina,tipo):
+    pagina = open(pagina, 'r', encoding=tipo)
+    
+    paginaString = pagina.read()
     
     
+    soup = BeautifulSoup(paginaString, 'html.parser')
+    celdas = soup.find_all('td')
+    lista = []
+    
+    for celda in celdas:
+        lista.append(celda.get_text())
+    return lista
+
+def comproR6():
+    datosPaginaProfesor = obtenerDatosHtml("variacionProvincias2011-17.htm","ISO-8859-1")
+    datosPaginaCreada = obtenerDatosHtml(carpetaDatos+"/variacionProvincias.html","utf8")
+    #datosPaginaCreada[5] = 000
+    if datosPaginaProfesor == datosPaginaCreada: 
+        print("Los datos de las variaciones en el ejercicio 6 son igualaes") 
+    else : 
+        print("Los datos de las variaciones en el ejercicio 6 no igualaes")
+        
+        
 def main():
     
-    
+    #Se crea la carpeta donde almacenaremos los datos si esta no existe.
     if not os.path.exists(carpetaDatos):
         os.mkdir(carpetaDatos)
         
-        
+    #Cargamos desde el csv los datos del csv a los diccionarios
     diccDatos, diccNombres = cargarDiccionarioCsv()
 
     R1(diccDatos, diccNombres)
@@ -480,25 +491,21 @@ def main():
     
     nombreGrafico = "graficoPoblacionMedia.jpg";
     nombreWeb = "poblacionComAutonomas.html"
+    print("-----------------------------------------------------------------------")
+    print("Grafica del apartado 3")
     R2R3(diccNombresComunidades,diccDatosComunidades,mejores,2017,nombreWeb,nombreGrafico)
     
     nombrePagina = "variacionComAutonomas.html"
     nombreGrafico = "graficoEvolucionPoblacion.jpg"
+    print("-----------------------------------------------------------------------")
+    print("Grafica del apartado 4")
     R4R5(diccDatosComunidades,diccNombresComunidades,mejores,2011,nombrePagina,nombreGrafico);
     
-    paginasR6(diccDatos)
+    print("-----------------------------------------------------------------------")
+    print("Graficas del apartado 6 y comprobacion de los datos de variación")
+    R6(diccDatos)
     
     
-    
-    
-    
-    
-
-    
-    
-    
-    
-  
 if __name__== "__main__":
     main()
     
