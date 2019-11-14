@@ -12,6 +12,7 @@ import math
 from bs4 import BeautifulSoup
 from collections import Counter
 import matplotlib.pyplot as plt
+import itertools
 
 locale.setlocale(locale.LC_ALL,'')
 
@@ -365,13 +366,16 @@ def obtenerDiccMediaComunidades(diccDatosComunidades,opcion):
     
     return diccMediaComunidades
 
-def crearGraficoR3(diccDatosComunidades,mejores,año,nombreGrafico):
+def crearGraficoR3(diccDatosComunidades,diccNombres,mejores,año,nombreGrafico):
     
-    x,y = zip(* mejores)
+    xCod,y = zip(* mejores)
+    x = []
     yHombres = []
     yMujeres = []
     posValor = añoInicio - año
-    for codComunidad in x:
+    for i in range(len(xCod)):
+        codComunidad = xCod[i]
+        x.append(diccNombres[codComunidad])
         yHombres.append(diccDatosComunidades[codComunidad].get("Hombres")[posValor])
         yMujeres.append(diccDatosComunidades[codComunidad].get("Mujeres")[posValor])
         
@@ -388,49 +392,51 @@ def crearGraficoR3(diccDatosComunidades,mejores,año,nombreGrafico):
     plt.ylabel("Códicgo de Comunidad Autónoma")
     plt.legend(loc='upper right')
     
-    plt.savefig(nombreGrafico)  
+    plt.savefig(nombreGrafico, bbox_inches='tight')  
 
 
 def R2R3(diccNombresComunidades,diccDatosComunidades,mejores,año,nombreWeb,nombreGrafico):
     
     
     
-    crearGraficoR3(diccDatosComunidades,mejores,año,nombreGrafico)
+    crearGraficoR3(diccDatosComunidades,diccNombresComunidades,mejores,año,nombreGrafico)
     generarWebComunidades(diccNombresComunidades,diccDatosComunidades,nombreWeb,nombreGrafico)
     
     #diccProvinciasComunidades = diccProvinciasComunidadesHtml(diccNombresComunidades)
 
-def crearGraficoR5(diccDatosComunidades,mejores,nombreGrafico,añoElegido):
+def crearGraficoR5(diccDatosComunidades,diccNombres,mejores,nombreGrafico,añoElegido):
+    xCod,y = zip(* mejores)
+    x = []
+
     
-    x,y = zip(* mejores)
-    numAños = añoInicio-añoElegido +1
     plt.figure("lineas"+nombreGrafico)
     años = [añoElegido]
     añoActual = añoElegido + 1
     while añoActual <= añoInicio:
         años.append(añoActual)
         añoActual += 1
-    for codComunidad in x:
+    for i in range(len(xCod)):
+        codComunidad = xCod[i]
         valores = diccDatosComunidades[codComunidad].get("Totales")
-        print(valores)
         valores = np.flip(valores)
         valores = valores[añoElegido - añoFinal:]
-        print(valores)
-        plt.plot(años,valores[:],label = codComunidad)
+        nombre = """{} {}""".format(codComunidad, diccNombres[codComunidad])
+        x.append(nombre)     
+        plt.plot(años,valores[:],label = nombre)
     
     plt.title("Total de las 10 comunidades con mas media")
     plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
     plt.xlabel("Años")
     plt.ylabel("Millones de habitantes")
-    plt.legend(loc='upper right', bbox_to_anchor=(1.15,1))
+    plt.legend(loc='upper right', bbox_to_anchor=(1.52,1))
     
-    plt.savefig(nombreGrafico) 
+    plt.savefig(nombreGrafico, bbox_inches='tight', dpi = 300) 
     
 def R4R5(diccDatos,diccNombres,mejores,añoElegido,nombrePagina,nombreGrafico):
     titulo = "Apartado 4 y 5"
     tipos = ["Hombres","Mujeres"]
     
-    crearGraficoR5(diccDatos,mejores,nombreGrafico,añoElegido)
+    crearGraficoR5(diccDatos,diccNombres,mejores,nombreGrafico,añoElegido)
     generarWebAbsolutaRelativa(diccDatos,diccNombres,tipos,titulo,nombrePagina,nombreGrafico)
     
     
