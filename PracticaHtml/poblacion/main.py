@@ -183,9 +183,7 @@ def obtenerDiccVariacion(diccDatos,tipos):
             
             for i in range(numElementos):
                 valorAbsoluta = int(float(datosActuales[i]) - float(datosActuales[i+1]))
-                valorAbsoluta = redondear(valorAbsoluta,decimales)
                 valorRelativa = (valorAbsoluta / float(datosActuales[i+1])) * 100
-                valorRelativa = redondear(valorRelativa,decimales)
                 datosVarAbsoluta[i] = valorAbsoluta
                 datosVarRelativa[i] = valorRelativa
                 
