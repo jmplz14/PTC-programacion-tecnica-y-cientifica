@@ -126,7 +126,7 @@ def generarWebAbsolutaRelativa(diccDatos,diccNombres,tipos,titulo,fichero,imagen
             nombre = diccNombres[codigo];
         else:
             nombre = ""
-        columnaTabla = "\t<tr>\n\t\t <td>{} {}</td>".format(codigo,nombre)
+        columnaTabla = "\t<tr>\n\t\t <th>{} {}</th>".format(codigo,nombre)
         absoluta = diccVarAbsoluta[codigo]
         relativa = diccVarRelativa[codigo]
         
@@ -337,7 +337,7 @@ def generarWebComunidades(diccNombresComunidades,diccDatosComunidades,nombreWeb,
         else:
             nombre = ""        
         
-        columnaTabla = "\t<tr>\n\t\t <td>{} {}</td>".format(codigo,nombre)
+        columnaTabla = "\t<tr>\n\t\t <th>{} {}</th>".format(codigo,nombre)
         hombres = diccDatosComunidades[codigo].get("Hombres")
         mujeres = diccDatosComunidades[codigo].get("Mujeres")
         valores = np.concatenate((hombres,mujeres)) 
@@ -381,7 +381,7 @@ def crearGraficoR3(diccDatosComunidades,diccNombres,mejores,año,nombreGrafico):
         
     X = np.arange(len(yHombres))
     
-    plt.figure("barras"+nombreGrafico)
+    plt.figure("barras"+nombreGrafico, figsize=(8, 6))
     plt.title("Población de las 10 comunidades con más población media")
     plt.barh(X + 0.4, yMujeres, color = "g", height = 0.4, label = "Mujeres")
     plt.barh(X + 0.00, yHombres, color = "b", height = 0.4, label = "Hombres")
@@ -409,7 +409,7 @@ def crearGraficoR5(diccDatosComunidades,diccNombres,mejores,nombreGrafico,añoEl
     x = []
 
     
-    plt.figure("lineas"+nombreGrafico)
+    plt.figure("lineas"+nombreGrafico,figsize=(7, 6))
     años = [añoElegido]
     añoActual = añoElegido + 1
     while añoActual <= añoInicio:
@@ -430,7 +430,7 @@ def crearGraficoR5(diccDatosComunidades,diccNombres,mejores,nombreGrafico,añoEl
     plt.ylabel("Millones de habitantes")
     plt.legend(loc='upper right', bbox_to_anchor=(1.52,1))
     
-    plt.savefig(nombreGrafico, bbox_inches='tight', dpi = 300) 
+    plt.savefig(nombreGrafico, bbox_inches='tight') 
     
 def R4R5(diccDatos,diccNombres,mejores,añoElegido,nombrePagina,nombreGrafico):
     titulo = "Apartado 4 y 5"
