@@ -13,12 +13,13 @@ from bs4 import BeautifulSoup
 from collections import Counter
 import matplotlib.pyplot as plt
 import itertools
-
+import os
 locale.setlocale(locale.LC_ALL,'')
 
 ficheroCsv = "poblacionProvinciasHM2010-17.csv"
 añoInicio = 2017
 añoFinal = 2010
+carpetaDatos = "resultados/"
 
 
 def puntosDecimalesFloat(numero):
@@ -79,11 +80,11 @@ def generarWebAbsolutaRelativa(diccDatos,diccNombres,tipos,titulo,fichero,imagen
     
     numTipos = len(tipos)
     diccVarRelativa, diccVarAbsoluta = obtenerDiccVariacion(diccDatos,tipos)
-    f = open(fichero,'w', encoding="utf8" )
+    f = open(carpetaDatos + fichero,'w', encoding="utf8" )
     
     pagina = """<!DOCTYPE html><html>
     <head><title>{}</title>
-    <link rel="stylesheet" href="estilo.css">
+    <link rel="stylesheet" href="../estilo.css">
     <meta charset="utf8"></head>
     <body>
     <table>""".format(titulo)
@@ -307,11 +308,11 @@ def obtenerStringCsvNumpy(valores):
 
             
 def generarWebComunidades(diccNombresComunidades,diccDatosComunidades,nombreWeb,nombreImagen):
-    f = open(nombreWeb,'w', encoding="utf8" )
+    f = open(carpetaDatos + nombreWeb,'w', encoding="utf8" )
     
     pagina = """<!DOCTYPE html><html>
     <head><title>Apartado 2 y 3</title>
-    <link rel="stylesheet" href="estilo.css">
+    <link rel="stylesheet" href="../estilo.css">
     <meta charset="utf8"></head>
     <body>
     <table>"""
@@ -392,7 +393,7 @@ def crearGraficoR3(diccDatosComunidades,diccNombres,mejores,año,nombreGrafico):
     plt.ylabel("Códicgo de Comunidad Autónoma")
     plt.legend(loc='upper right')
     
-    plt.savefig(nombreGrafico, bbox_inches='tight')  
+    plt.savefig(carpetaDatos + nombreGrafico, bbox_inches='tight')  
 
 
 def R2R3(diccNombresComunidades,diccDatosComunidades,mejores,año,nombreWeb,nombreGrafico):
@@ -430,7 +431,7 @@ def crearGraficoR5(diccDatosComunidades,diccNombres,mejores,nombreGrafico,añoEl
     plt.ylabel("Millones de habitantes")
     plt.legend(loc='upper right', bbox_to_anchor=(1.52,1))
     
-    plt.savefig(nombreGrafico, bbox_inches='tight') 
+    plt.savefig(carpetaDatos + nombreGrafico, bbox_inches='tight') 
     
 def R4R5(diccDatos,diccNombres,mejores,añoElegido,nombrePagina,nombreGrafico):
     titulo = "Apartado 4 y 5"
@@ -462,6 +463,12 @@ def paginasR6(diccDatos):
     
     
 def main():
+    
+    
+    if not os.path.exists(carpetaDatos):
+        os.mkdir(carpetaDatos)
+        
+        
     diccDatos, diccNombres = cargarDiccionarioCsv()
 
     R1(diccDatos, diccNombres)
