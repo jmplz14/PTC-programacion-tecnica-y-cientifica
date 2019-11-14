@@ -206,9 +206,9 @@ def obtenerDiccVariacion(diccDatos,tipos):
         
         
 """Generado apartir de R2"""
-def diccComunidadesProvinciasHtml():
+def diccComunidadesProvinciasHtml(ficheroComunidades):
     numColumnas = 4
-    comunidadesFich = open('comunidadesAutonomas.htm', 'r', encoding="ISO-8859-1")
+    comunidadesFich = open(ficheroComunidades, 'r', encoding="ISO-8859-1")
     provinciasFich = open('comunidadAutonoma-Provincia.htm', 'r', encoding="ISO-8859-1")
     
     comString = comunidadesFich.read()
@@ -254,12 +254,13 @@ def diccComunidadesProvinciasHtml():
         codigoProvincia = codigoProvincia.replace(" ","")
         nombreProvincia = valores[pos+3].get_text()
         #print(i)
-        valoresComunidad = diccProvinciasComunidad[codigoComunidad]
-        #print(valoresComunidad)
-        valoresComunidad.update({codigoProvincia:nombreProvincia})
-        #print(valoresComunidad)
-        
-        diccProvinciasComunidad.update({codigoComunidad: valoresComunidad} )
+        if codigoComunidad in diccProvinciasComunidad.keys():
+            valoresComunidad = diccProvinciasComunidad[codigoComunidad]
+            #print(valoresComunidad)
+            valoresComunidad.update({codigoProvincia:nombreProvincia})
+            #print(valoresComunidad)
+            
+            diccProvinciasComunidad.update({codigoComunidad: valoresComunidad} )
         
     #print(diccProvinciasComunidad)
   
@@ -304,8 +305,8 @@ def obtenerStringCsvNumpy(valores):
     return stringCsv
 
             
-def generarWebComunidades(diccNombresComunidades,diccDatosComunidades,nombreImagen):
-    f = open('poblacionComAutonomas.html','w', encoding="utf8" )
+def generarWebComunidades(diccNombresComunidades,diccDatosComunidades,nombreWeb,nombreImagen):
+    f = open(nombreWeb,'w', encoding="utf8" )
     
     pagina = """<!DOCTYPE html><html>
     <head><title>Apartado 2 y 3</title>
@@ -376,7 +377,7 @@ def crearGraficoR3(diccDatosComunidades,mejores,año,nombreGrafico):
         
     X = np.arange(len(yHombres))
     
-    plt.figure("barras")
+    plt.figure("barras"+nombreGrafico)
     plt.title("Población de las 10 comunidades con más población media")
     plt.barh(X + 0.4, yMujeres, color = "g", height = 0.4, label = "Mujeres")
     plt.barh(X + 0.00, yHombres, color = "b", height = 0.4, label = "Hombres")
@@ -390,12 +391,12 @@ def crearGraficoR3(diccDatosComunidades,mejores,año,nombreGrafico):
     plt.savefig(nombreGrafico)  
 
 
-def R2R3(diccNombresComunidades,diccDatosComunidades,mejores,año):
+def R2R3(diccNombresComunidades,diccDatosComunidades,mejores,año,nombreWeb,nombreGrafico):
     
-    nombreGrafico = "graficoPoblacionMedia.jpg";
+    
     
     crearGraficoR3(diccDatosComunidades,mejores,año,nombreGrafico)
-    generarWebComunidades(diccNombresComunidades,diccDatosComunidades,nombreGrafico)
+    generarWebComunidades(diccNombresComunidades,diccDatosComunidades,nombreWeb,nombreGrafico)
     
     #diccProvinciasComunidades = diccProvinciasComunidadesHtml(diccNombresComunidades)
 
@@ -403,7 +404,7 @@ def crearGraficoR5(diccDatosComunidades,mejores,nombreGrafico,añoElegido):
     
     x,y = zip(* mejores)
     numAños = añoInicio-añoElegido +1
-    plt.figure("lineas")
+    plt.figure("lineas"+nombreGrafico)
     años = [añoElegido]
     añoActual = añoElegido + 1
     while añoActual <= añoInicio:
@@ -425,31 +426,59 @@ def crearGraficoR5(diccDatosComunidades,mejores,nombreGrafico,añoElegido):
     
     plt.savefig(nombreGrafico) 
     
-def R4R5(diccDatos,diccNombres,mejores,añoElegido):
+def R4R5(diccDatos,diccNombres,mejores,añoElegido,nombrePagina,nombreGrafico):
     titulo = "Apartado 4 y 5"
-    nombrePagina = "variacionComAutonomas.html"
     tipos = ["Hombres","Mujeres"]
-    nombreGrafico = "graficoEvolucionPoblacion.jpg"
     
     crearGraficoR5(diccDatos,mejores,nombreGrafico,añoElegido)
     generarWebAbsolutaRelativa(diccDatos,diccNombres,tipos,titulo,nombrePagina,nombreGrafico)
     
     
-
-def main():
-    diccDatos, diccNombres = cargarDiccionarioCsv()
-
-    R1(diccDatos, diccNombres)
-    
-    diccNombresComunidades, diccProvinciasComunidad, = diccComunidadesProvinciasHtml()
+def paginasR6(diccDatos):
+    ficheroR6 = "comunidadesAutonomasBis.htm"
+    nombreWeb = "poblacionComAutonomasBis.html"
+    nombreGrafico = "graficoPoblacionMediaBis.jpg";
+    diccNombresComunidades, diccProvinciasComunidad, = diccComunidadesProvinciasHtml(ficheroR6)
     diccDatosComunidades = generarDiccComunidades(diccDatos,diccProvinciasComunidad)
     
     diccMediaComunidad = obtenerDiccMediaComunidades(diccDatosComunidades,"Totales") 
     mejores = Counter(diccMediaComunidad).most_common(10)
     
-    R2R3(diccNombresComunidades,diccDatosComunidades,mejores,2017)
     
-    R4R5(diccDatosComunidades,diccNombresComunidades,mejores,2011);
+    
+    R2R3(diccNombresComunidades,diccDatosComunidades,mejores,2017,nombreWeb, nombreGrafico)
+    
+    nombrePagina = "variacionComAutonomasBis.html"
+    nombreGrafico = "graficoEvolucionPoblacionBis.jpg"
+    
+    R4R5(diccDatosComunidades,diccNombresComunidades,mejores,2011,nombrePagina,nombreGrafico);
+
+    
+    
+def main():
+    diccDatos, diccNombres = cargarDiccionarioCsv()
+
+    R1(diccDatos, diccNombres)
+    
+    ficheroComunidades = "comunidadesAutonomas.htm"
+    diccNombresComunidades, diccProvinciasComunidad, = diccComunidadesProvinciasHtml(ficheroComunidades)
+    diccDatosComunidades = generarDiccComunidades(diccDatos,diccProvinciasComunidad)
+    
+    diccMediaComunidad = obtenerDiccMediaComunidades(diccDatosComunidades,"Totales") 
+    mejores = Counter(diccMediaComunidad).most_common(10)
+    
+    nombreGrafico = "graficoPoblacionMedia.jpg";
+    nombreWeb = "poblacionComAutonomas.html"
+    R2R3(diccNombresComunidades,diccDatosComunidades,mejores,2017,nombreWeb,nombreGrafico)
+    
+    nombrePagina = "variacionComAutonomas.html"
+    nombreGrafico = "graficoEvolucionPoblacion.jpg"
+    R4R5(diccDatosComunidades,diccNombresComunidades,mejores,2011,nombrePagina,nombreGrafico);
+    
+    paginasR6(diccDatos)
+    
+    
+    
     
     
     
