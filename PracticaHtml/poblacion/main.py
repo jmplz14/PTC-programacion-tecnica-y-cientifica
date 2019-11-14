@@ -209,7 +209,7 @@ def R1(diccDatos, diccNombres):
     
     #Inicaimos los valores para el titulo la pagina que leeremos.
     titulo = "Apartado 1"
-    pagina = "variacionProvincias.html"
+    pagina = "variacionProvincias.htm"
     
     #añadicmos los tipos que queremos mostrar.
     tipos = ["Totales"]
@@ -570,88 +570,152 @@ def R2R3(diccNombresComunidades,diccDatosComunidades,mejores,año,nombreWeb,nomb
     #creamos la web para el apartado 2
     generarWebComunidades(diccNombresComunidades,diccDatosComunidades,nombreWeb,nombreGrafico)
     
-    #diccProvinciasComunidades = diccProvinciasComunidadesHtml(diccNombresComunidades)
-
+""" Se crea el grafico del apartado 5 de la practica
+    Parameters:
+        -diccDatosComunidades: Diccionario con la estructura {codigoComAutonoma:{"Totales":[], "Hombres":[] "Mujeres":[]}}
+        -diccNombres: Diccionario con la estructra {codigoComAutonomica: NombreComAutonomica}
+        -mejores: Lista de tuplas que contiene (codigoComAutonoma, media) 
+        -nombreGrafico: nombre con el que guardaremos la grafica
+        -añoElegido: Año elegido para iniciar la grafica
+    Returns:
+""" 
 def crearGraficoR5(diccDatosComunidades,diccNombres,mejores,nombreGrafico,añoElegido):
-    xCod,y = zip(* mejores)
-    x = []
-
     
+    #separamos la tupla quedandonos con el codigo de comunidad en xCod
+    xCod,y = zip(* mejores)
+    #x = []
+
+    #inicamos la grafica
     plt.figure("lineas"+nombreGrafico,figsize=(7, 6))
+    
+    #creamos las etiquetas para el eje de la grafica de años inicial solo con el año elegido de inicio
+    #termina en el utlimo año
     años = [añoElegido]
     añoActual = añoElegido + 1
     while añoActual <= añoInicio:
         años.append(añoActual)
         añoActual += 1
+        
+    #recorremos el array que tiene el codigo de las comunidades aoutonomas
     for i in range(len(xCod)):
+        #guardamos el codigo de la comunidad y cogemos los totales
         codComunidad = xCod[i]
         valores = diccDatosComunidades[codComunidad].get("Totales")
+        
+        #los invertimos porque nos interesa mostrarlos en sentido contrario y eliminamos los años que no mostraremos
         valores = np.flip(valores)
         valores = valores[añoElegido - añoFinal:]
+        
+        #nos quedamos el nombre de la comunidad aoutonoma para y el codigo y lo añadimos al label
         nombre = """{} {}""".format(codComunidad, diccNombres[codComunidad])
-        x.append(nombre)     
-        plt.plot(años,valores[:],label = nombre)
+        plt.plot(años,valores,label = nombre)
     
-    plt.title("Total de las 10 comunidades con mas media en " + añoElegido)
+    #rellenamos los titulos y opiciones del grafico
+    plt.title("Total de las 10 comunidades con mas media en 2017")
     plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
     plt.xlabel("Años")
     plt.ylabel("Millones de habitantes")
     plt.legend(loc='upper right', bbox_to_anchor=(1.52,1))
     
+    #guardamos y dibujamos el grafico
     plt.savefig(carpetaDatos + nombreGrafico, bbox_inches='tight') 
     plt.show ()
-    
+
+""" Se realiza el grafico y la web de los apartados 4 y 5
+    Parameters:
+        -diccDatos: Diccionario con la estructura {codigoComAutonoma:{"Totales":[], "Hombres":[] "Mujeres":[]}}
+        -diccNombres: Diccionario con la estructra {codigoComAutonomica: NombreComAutonomica}
+        -mejores: Lista de tuplas que contiene (codigoComAutonoma, media) 
+        -añoElegido: Año elegido para iniciar la grafica
+        -nombrePagina: nombre del fichero en el que alamacenaremos la web
+        -nombreGrafico: nombre con el que guardaremos la grafica
+    Returns:
+"""   
 def R4R5(diccDatos,diccNombres,mejores,añoElegido,nombrePagina,nombreGrafico):
+    #titulo de la web
     titulo = "Apartado 4 y 5"
     tipos = ["Hombres","Mujeres"]
     
+    #creamos la grafica del apartado 5
     crearGraficoR5(diccDatos,diccNombres,mejores,nombreGrafico,añoElegido)
+    
+    #creamos la web del apartado 4
     generarWebAbsolutaRelativa(diccDatos,diccNombres,tipos,titulo,nombrePagina,nombreGrafico)
     
-    
+
+""" Se realiza el apartado 6
+    Parameters:
+        -diccDatos: Diccionario con la estructura {Codigo:{"Totales":[], "Hombres":[] "Mujeres":[]}}
+    Returns:
+"""   
 def R6(diccDatos):
+    
     ficheroR6 = "comunidadesAutonomasBis.htm"
-    nombreWeb = "poblacionComAutonomasBis.html"
-    nombreGrafico = "graficoPoblacionMediaBis.jpg";
+    nombreWeb = "poblacionComAutonomasBis.htm"
+    nombreGrafico = "graficoPoblacionMediaBis.jpg"
+    
+    #obtenemos los codigos, nombres y provincias de las comunidades autonomas
     diccNombresComunidades, diccProvinciasComunidad, = diccComunidadesProvinciasHtml(ficheroR6)
     diccDatosComunidades = generarDiccComunidades(diccDatos,diccProvinciasComunidad)
     
+    #obtenemos la media de los totales de estas comunidades y nos quedamos ocn las 10 mejores
     diccMediaComunidad = obtenerDiccMediaComunidades(diccDatosComunidades,"Totales") 
     mejores = Counter(diccMediaComunidad).most_common(10)
     
     
-    
+    #llamamos a la funcion del apartado 2 y 3 para crear la web y el grafico
     R2R3(diccNombresComunidades,diccDatosComunidades,mejores,2017,nombreWeb, nombreGrafico)
     
-    nombrePagina = "variacionComAutonomasBis.html"
+    nombrePagina = "variacionComAutonomasBis.htm"
     nombreGrafico = "graficoEvolucionPoblacionBis.jpg"
     
+    #llamamos a la funcion del apartado 4 y 5 para crear la web y el grafico
     R4R5(diccDatosComunidades,diccNombresComunidades,mejores,2011,nombrePagina,nombreGrafico);
     
+    #Comprobación de los datos
     comproR6()
-
+""" Carga los td de una tabla a una lista y devuelve esta
+    Parameters:
+        -pagina: nombre de la pagina que abireremos
+        -tipo: Formato del fichero
+    Returns:
+        -lista: Lista de string con los valores que contienen los td de la tabla
+"""   
 def obtenerDatosHtml(pagina,tipo):
+    #abrimos la pagina
     pagina = open(pagina, 'r', encoding=tipo)
     
+    #la leemos y alamacenamos en un string
     paginaString = pagina.read()
     
-    
+    #obtenemos los td de la pagina
     soup = BeautifulSoup(paginaString, 'html.parser')
     celdas = soup.find_all('td')
-    lista = []
     
+    #recorremos todos los td obtenidos y vamos guardando el testo de estos en un td
+    lista = []
     for celda in celdas:
         lista.append(celda.get_text())
+        
+    pagina.close()
     return lista
 
+""" Se realiza la comprobación de que las varianzas calculadas en el apartado 1 correspondan
+    con las dadas por el profesor
+    Parameters:
+    Returns:
+"""   
 def comproR6():
+    
+    #obtenemos los datos de las dos paginas web
     datosPaginaProfesor = obtenerDatosHtml("variacionProvincias2011-17.htm","ISO-8859-1")
-    datosPaginaCreada = obtenerDatosHtml(carpetaDatos+"/variacionProvincias.html","utf8")
-    #datosPaginaCreada[5] = 000
+    datosPaginaCreada = obtenerDatosHtml(carpetaDatos+"variacionProvincias.htm","utf8")
+    
+    #comparamos las dos listas con los datos
     if datosPaginaProfesor == datosPaginaCreada: 
-        print("Los datos de las variaciones en el ejercicio 6 son igualaes") 
+        print("Los datos de las variaciones de la pagina dada como ejemplo y la generada son iguales") 
     else : 
-        print("Los datos de las variaciones en el ejercicio 6 no igualaes")
+        print("Los datos de las variaciones de la pagina dada como ejemplo y la generada no son iguales") 
         
         
 def main():
@@ -680,7 +744,7 @@ def main():
     mejores = Counter(diccMediaComunidad).most_common(10)
     
     nombreGrafico = "graficoPoblacionMedia.jpg";
-    nombreWeb = "poblacionComAutonomas.html"
+    nombreWeb = "poblacionComAutonomas.htm"
     
     print("-----------------------------------------------------------------------")
     print("Grafica del apartado 3")
@@ -688,16 +752,16 @@ def main():
     #realizamos lo propuesto en el apartado dos y tres.
     R2R3(diccNombresComunidades,diccDatosComunidades,mejores,2017,nombreWeb,nombreGrafico)
     
-    """
-    nombrePagina = "variacionComAutonomas.html"
+    
+    nombrePagina = "variacionComAutonomas.htm"
     nombreGrafico = "graficoEvolucionPoblacion.jpg"
     print("-----------------------------------------------------------------------")
     print("Grafica del apartado 4")
     R4R5(diccDatosComunidades,diccNombresComunidades,mejores,2011,nombrePagina,nombreGrafico);
-    
+
     print("-----------------------------------------------------------------------")
     print("Graficas del apartado 6 y comprobacion de los datos de variación")
-    R6(diccDatos)"""
+    R6(diccDatos)
     
     
 if __name__== "__main__":
