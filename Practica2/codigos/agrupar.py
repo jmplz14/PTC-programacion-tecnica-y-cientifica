@@ -8,7 +8,7 @@ Created on Wed Jan  1 18:03:42 2020
 import json 
 import numpy as np
 import math
-
+import glob
 def buscarClusters(minimo,maximo,maxDistancia,puntosX,puntosY):
     cluster = list()
     tam = len(puntosX)
@@ -35,31 +35,46 @@ def buscarClusters(minimo,maximo,maxDistancia,puntosX,puntosY):
     
     return cluster
    
-    
+def crearJson(directorio,nombre):
+    numCluster = 0
+    #clusters = list()
+    listaDir=sorted(glob.glob(directorio+'*'))
+    salida = open(nombre, "w")
+    for dirDatos in listaDir:
+        fichero = glob.glob(dirDatos+'/*.json')
+        print(fichero)
+             
+        if len(fichero) == 1:
+            with open(fichero[0]) as f:
+                for line in f:
+                    datos = json.loads(line)
+                    if 'PuntosX' in datos:
+                        puntosX = datos["PuntosX"] 
+                        puntosY = datos["PuntosY"]
+                        cluster = buscarClusters(3,25,0.05,puntosX,puntosY)
+                        for i in cluster:
+                            numPuntos = i[1]-i[0] + 1
+                            x = puntosX[i[0]:i[1] + 1]
+                            y = puntosY[i[0]:i[1]+1]
+                            #dicc = {"numero_cluster": numCluster, "numero_puntos": numPuntos , "puntosX": x, "puntosY": y}
+                            #print(dicc)
+                            salida.write("{")
+                            salida.write(""""numero_cluster":{}, "numero_puntos":{}, "puntosX":{}, "puntosY":{}""".format(numCluster,numPuntos,x,y))
+                            salida.write("}\n")
+                            #salida.write(str(dicc))
+                            numCluster += 1;
+                    
             
+    salida.close()
         
-numCluster = 0
-fila = -1
-clusters = list()
-salida = open("prueba.json", "w")
-with open('test1/test.json') as f:
-    for line in f:  
-        datos = json.loads(line)
-        if 'PuntosX' in datos:
-            puntosX = datos["PuntosX"] 
-            puntosY = datos["PuntosY"]
-            cluster = buscarClusters(3,25,0.05,puntosX,puntosY)
-            for i in cluster:
-                numPuntos = i[1]-i[0] + 1
-                x = puntosX[i[0]:i[1] + 1]
-                y = puntosY[i[0]:i[1]+1]
-                salida.write("{")
-                salida.write(""""numero_cluster":{}, "numero_puntos":{}, "puntosX":{}, "puntosY":{}""".format(numCluster,numPuntos,x,y))
-                salida.write("}\n")
-                numCluster += 1;
+if __name__ == "__main__":
+    crearJson("positivo","clustersPiernas.json")
+    crearJson("negativo","clustersNoPiernas.json")
+        
+        
+        
             
-        
-salida.close()      
+
         
     
     

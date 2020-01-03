@@ -43,28 +43,44 @@ def obtenerProfundidad(puntosX,puntosY,tam):
     return profundiad
 
 
-
-salidacsv = open("datos.csv", "w")
-salidajson = open("salida.json", "w")
-tipo = 0
-with open('prueba.json') as f:
-    for line in f:  
-        datos = json.loads(line)
-        if 'puntosX' in datos:
-            
-            puntosX = datos["puntosX"] 
-            puntosY = datos["puntosY"]
-            tam = datos["numero_puntos"]
-            anchura = obtenerAnchura(puntosX,puntosY,tam)
-            perimetro = obtenerPerimetro(puntosX,puntosY,tam)
-            profundiad = obtenerProfundidad(puntosX,puntosY,tam)
-            salidacsv.write("""{}, {}, {}, {}\n""".format(perimetro,profundiad,anchura,tipo)) 
-            
-            
+def crearFicheros(ficheros,ficheroCsv,ficherosJson,tipo):
+    
+    salidacsv = open(ficheroCsv, "w")
+    numFich = len(ficheros)
+    
+    for i in range(0,numFich):
+        numCluster = 0
+        salidajson = open(ficherosJson[i], "w")
+        with open(ficheros[i]) as f:
+            for line in f:  
+                datos = json.loads(line)
+                if 'puntosX' in datos:
+                    
+                    puntosX = datos["puntosX"] 
+                    puntosY = datos["puntosY"]
+                    tam = datos["numero_puntos"]
+                    anchura = obtenerAnchura(puntosX,puntosY,tam)
+                    perimetro = obtenerPerimetro(puntosX,puntosY,tam)
+                    profundiad = obtenerProfundidad(puntosX,puntosY,tam)
+        
+                    salidacsv.write("""{}, {}, {}, {}\n""".format(perimetro,profundiad,anchura,tipo[i])) 
+                    
+                    salidajson.write("{")
+                    salidajson.write(""""numero_cluester":{}, "perimetro":{}, "profundidad":{}, "anchura":{} "esPierna":{} """.format(numCluster,perimetro,profundiad,anchura,tipo[i]))
+                    salidajson.write("}\n")
+                    numCluster += 1
+                    
+        salidajson.close()
                 
-            
-            
-            
-
-salidacsv.close()  
-salidajson.close()
+                
+    
+    salidacsv.close()  
+    
+    
+if __name__ == "__main__":
+    ficheros = ["clustersPiernas.json","clustersNoPiernas.json"]
+    ficherosJson = ["carcteristicasPiernas.dat","carcteristicasNoPiernas.dat"]
+    tipos = [0,1]
+    
+    crearFicheros(ficheros,"piernasDataset.csv",ficherosJson,tipos)
+    

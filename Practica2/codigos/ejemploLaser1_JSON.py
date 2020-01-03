@@ -78,7 +78,7 @@ else:
 #Creamos el fichero JSON para guardar los datos del laser
 #usamos diccionarios
 segundos=15
-maxIter=50
+maxIter=3
 iteracion=0
 
 cabecera={"TiempoSleep":segundos,
@@ -124,39 +124,13 @@ while(iteracion<maxIter and seguir):
     img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
  
      
-    #Convertir img a hsv y detectar colores
-    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-    verde_bajos = np.array([49,50,50], dtype=np.uint8)
-    verde_altos = np.array([80, 255, 255], dtype=np.uint8)
-    mask = cv2.inRange(hsv, verde_bajos, verde_altos) #Crear mascara
- 
-    #Limpiar mascara y buscar centro del objeto verde
-    moments = cv2.moments(mask)
-    area = moments['m00']
-    if(area > 200):
-        x = int(moments['m10']/moments['m00'])
-        y = int(moments['m01']/moments['m00'])
-        cv2.rectangle(img, (x, y), (x+2, y+2),(0,0,255), 2)
-        #Descomentar para printear la posicion del centro
-        #print(x,y)
- 
-        #Si el centro del objeto esta en la parte central de la pantalla (aprox.), detener motores
-        if abs(x-256/2) < 15:
-            vrep.simxSetJointTargetVelocity(clientID, left_motor_handle,0,vrep.simx_opmode_streaming)
-            vrep.simxSetJointTargetVelocity(clientID, right_motor_handle,0,vrep.simx_opmode_streaming)
- 
-        #Si no, girar los motores hacia la derecha o la izquierda
-        elif x > 256/2:
-            vrep.simxSetJointTargetVelocity(clientID, left_motor_handle,velocidad,vrep.simx_opmode_streaming)
-            vrep.simxSetJointTargetVelocity(clientID, right_motor_handle,-velocidad,vrep.simx_opmode_streaming)
-        elif x < 256/2:
-            vrep.simxSetJointTargetVelocity(clientID, left_motor_handle,-velocidad,vrep.simx_opmode_streaming)
-            vrep.simxSetJointTargetVelocity(clientID, right_motor_handle,velocidad,vrep.simx_opmode_streaming)
+   
+
  
  
     #Mostrar frame y salir con "ESC"
     cv2.imshow('Image', img)
-    cv2.imshow('Mask', mask)
+
     
     if iteracion == 0:
         cv2.imwrite(nombre+str(iteracion + 1)+'.jpg', img)
