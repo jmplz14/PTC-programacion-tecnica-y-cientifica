@@ -77,7 +77,7 @@ else:
 
 #Creamos el fichero JSON para guardar los datos del laser
 #usamos diccionarios
-segundos=10
+segundos=15
 maxIter=50
 iteracion=0
 
