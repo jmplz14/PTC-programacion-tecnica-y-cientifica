@@ -31,18 +31,23 @@ def obtenerAnchura(puntosX,puntosY,tam):
 def obtenerProfundidad(puntosX,puntosY,tam):
     p1 = np.array([puntosX[0],puntosY[0]])
     p2 = np.array([puntosX[tam - 1],puntosY[tam - 1]])
-    profundiadMax = 0
+    profundidadMax = 0
     if tam > 2:
-        profundiadMax = sys.float_info.max
+        profundidadMax = sys.float_info.max
         for i in range(1,tam-1):
             p3 = np.array([puntosX[i],puntosY[i]])
-            profundiad = np.linalg.norm(np.cross(p2-p1, p1-p3))/np.linalg.norm(p2-p1)
-            if profundiad < profundiadMax:
-                profundiadMax = profundiad
+            profundidad = np.linalg.norm(np.cross(p2-p1, p1-p3))/np.linalg.norm(p2-p1)
+            if profundidad < profundidadMax:
+                profundidadMax = profundidad
         
-    return profundiad
+    return profundidad
 
-
+def obtenerDatos(puntosX,puntosY,tam):
+    anchura = obtenerAnchura(puntosX,puntosY,tam)
+    perimetro = obtenerPerimetro(puntosX,puntosY,tam)
+    profundidad = obtenerProfundidad(puntosX,puntosY,tam)
+    
+    return [perimetro,profundidad,anchura]
 def crearFicheros(ficheros,ficheroCsv,ficherosJson,tipo):
     
     salidacsv = open(ficheroCsv, "w")
@@ -59,14 +64,14 @@ def crearFicheros(ficheros,ficheroCsv,ficherosJson,tipo):
                     puntosX = datos["puntosX"] 
                     puntosY = datos["puntosY"]
                     tam = datos["numero_puntos"]
-                    anchura = obtenerAnchura(puntosX,puntosY,tam)
-                    perimetro = obtenerPerimetro(puntosX,puntosY,tam)
-                    profundiad = obtenerProfundidad(puntosX,puntosY,tam)
-        
-                    salidacsv.write("""{}, {}, {}, {}\n""".format(perimetro,profundiad,anchura,tipo[i])) 
+                    #anchura = obtenerAnchura(puntosX,puntosY,tam)
+                    #perimetro = obtenerPerimetro(puntosX,puntosY,tam)
+                    #profundidad = obtenerProfundidad(puntosX,puntosY,tam)
+                    valores = obtenerDatos(puntosX,puntosY,tam)
+                    salidacsv.write("""{}, {}, {}, {}\n""".format(valores[0],valores[1],valores[2],tipo[i])) 
                     
                     salidajson.write("{")
-                    salidajson.write(""""numero_cluester":{}, "perimetro":{}, "profundidad":{}, "anchura":{} "esPierna":{} """.format(numCluster,perimetro,profundiad,anchura,tipo[i]))
+                    salidajson.write(""""numero_cluester":{}, "perimetro":{}, "profundidad":{}, "anchura":{} "esPierna":{} """.format(numCluster,valores[0],valores[1],valores[2],tipo[i]))
                     salidajson.write("}\n")
                     numCluster += 1
                     
@@ -80,7 +85,7 @@ def crearFicheros(ficheros,ficheroCsv,ficherosJson,tipo):
 if __name__ == "__main__":
     ficheros = ["clustersPiernas.json","clustersNoPiernas.json"]
     ficherosJson = ["carcteristicasPiernas.dat","carcteristicasNoPiernas.dat"]
-    tipos = [0,1]
+    tipos = [1,0]
     
     crearFicheros(ficheros,"piernasDataset.csv",ficherosJson,tipos)
     

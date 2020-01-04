@@ -51,7 +51,7 @@ def crearJson(directorio,nombre):
                     if 'PuntosX' in datos:
                         puntosX = datos["PuntosX"] 
                         puntosY = datos["PuntosY"]
-                        cluster = buscarClusters(3,25,0.05,puntosX,puntosY)
+                        cluster = buscarClusters(4,25,0.05,puntosX,puntosY)
                         for i in cluster:
                             numPuntos = i[1]-i[0] + 1
                             x = puntosX[i[0]:i[1] + 1]
