@@ -9,6 +9,9 @@ import json
 import numpy as np
 import math
 import glob
+MAXIMO = 25
+MINIMO = 3
+DISTANCIA = 0.03
 def buscarClusters(minimo,maximo,maxDistancia,puntosX,puntosY):
     cluster = list()
     tam = len(puntosX)
@@ -68,7 +71,7 @@ def crearJson(directorio,nombre):
     salida.close()
         
 if __name__ == "__main__":
-    crearJson("positivo","clustersPiernas.json")
+    crearJson("nuevoPositivo","clustersPiernas.json")
     crearJson("negativo","clustersNoPiernas.json")
         
         

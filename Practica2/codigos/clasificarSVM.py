@@ -142,7 +142,7 @@ gamma: por defecto auto = 1/ num_características
 '''
 print("Clasificación con kernek de base radial con C=1 y gamma=auto")
 
-svcRBF = SVC(kernel='rbf', gamma='auto') 
+svcRBF = SVC(kernel='rbf', gamma=.07, C=10000)
 svcRBF.fit(X_train, y_train)
 
 
@@ -176,7 +176,7 @@ print(classification_report(y_test, y_pred))
 #Para asegurarnos de que el resultado no depende del conjunto de test elegido
 #tenemos que realizar validación cruzada
 
-svcRBF2 = SVC(kernel='rbf', gamma='auto')
+svcRBF2 = SVC(kernel='rbf', gamma="auto")
 
 scores = cross_val_score(svcRBF2, X, y, cv=5)
 

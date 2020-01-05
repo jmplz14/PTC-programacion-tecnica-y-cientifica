@@ -15,19 +15,19 @@ def distanciaEuclidea(punto1,punto2):
 
 def obtenerPerimetro(puntosX,puntosY,tam):
     perimetro = 0
-    anterior = [puntosX[0],puntosY[0]]
+    anterior = np.array([puntosX[0],puntosY[0]])
     
     for i in range(1,tam):
-        actual = [puntosX[i],puntosY[i]]
-        perimetro += distanciaEuclidea(actual,anterior)
-        anterior = actual
+        actual = np.array([puntosX[i],puntosY[i]])
+        perimetro += np.linalg.norm((actual - anterior))
+        anterior = np.copy(actual)
         
     return perimetro
 
 def obtenerAnchura(puntosX,puntosY,tam):
-    primero = [puntosX[0],puntosY[0]]
-    ultimo = [puntosX[tam - 1],puntosY[tam - 1]]
-    return distanciaEuclidea(primero,ultimo)
+    primero = np.array([puntosX[0],puntosY[0]])
+    ultimo = np.array([puntosX[tam - 1],puntosY[tam - 1]])
+    return np.linalg.norm(ultimo-primero)
 def obtenerProfundidad(puntosX,puntosY,tam):
     p1 = np.array([puntosX[0],puntosY[0]])
     p2 = np.array([puntosX[tam - 1],puntosY[tam - 1]])

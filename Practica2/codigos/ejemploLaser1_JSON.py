@@ -77,8 +77,8 @@ else:
 
 #Creamos el fichero JSON para guardar los datos del laser
 #usamos diccionarios
-segundos=15
-maxIter=35
+segundos=5
+maxIter=100
 iteracion=0
 
 cabecera={"TiempoSleep":segundos,

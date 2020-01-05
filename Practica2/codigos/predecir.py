@@ -24,8 +24,13 @@ from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.model_selection import cross_val_score
 from sklearn.preprocessing import MinMaxScaler
 from warnings import simplefilter
-from sklearn.preprocessing import PolynomialFeatures
-from sklearn import preprocessing as pp
+
+def centeroidnp(arr):
+    length = arr.shape[0]
+    sum_x = np.sum(arr[:, 0])
+    sum_y = np.sum(arr[:, 1])
+    return sum_x/length, sum_y/length
+
 
 vrep.simxFinish(-1) #Terminar todas las conexiones
 clientID=vrep.simxStart('127.0.0.1',19999,True,True,5000,5) #Iniciar una nueva conexion en el puerto 19999 (direccion por defecto)
@@ -115,7 +120,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.20, rand
 
 print("Clasificación con kernek de base radial con C=1 y gamma=auto")
 
-svcRBF = SVC(kernel='rbf', gamma=20, C=1)
+svcRBF = SVC(kernel='rbf', gamma=0.06, C=10000, random_state=0)
 svcRBF.fit(X_train, y_train)
 
 
@@ -153,20 +158,25 @@ svcRBF2 = SVC(kernel='rbf', gamma='auto')
 
 scores = cross_val_score(svcRBF2, X, y, cv=5)
 
-# exactitud media con intervalo de confianza del 95%
+# exactitud media con intervalo de confositivoianza del 95%
 print("Accuracy 5-cross validation: %0.4f (+/- %0.4f)" % (scores.mean(), scores.std() * 2))
     
 plt.clf() 
-
+puntos = list()
 for i in cluster:
     numPuntos = i[1]-i[0] + 1
     x = puntosx[i[0]:i[1] + 1]
     y = puntosy[i[0]:i[1]+1]
     valores = caracteristicas.obtenerDatos(x,y,numPuntos)
-    print(svcRBF.predict([valores]))
-    print(len(x))
+    extremos = np.array([[x[0],y[0]],[x[-1],y[-1]]])
+    centro = centeroidnp(extremos)
+    print(centro)
     if svcRBF.predict([valores]) == 1.:
         plt.plot(x, y, 'r.')
+        extremos = np.array([[x[0],x[-1]],[y[0],y[-1]]])
+        centro = centeroidnp(extremos)
+        puntos.append((x[0] + x[-1])/2, (y[0] + y[-1])/2)
+        plt.plot((x[0] + x[-1])/2, (y[0] + y[-1])/2, 'g.')
     else:
            
         plt.plot(x, y, 'b.')
@@ -180,7 +190,10 @@ img.resize([resolution[0], resolution[1], 3])
 img = np.rot90(img,2)
 img = np.fliplr(img)
 img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
- 
+
+
+
+
      
    
 
