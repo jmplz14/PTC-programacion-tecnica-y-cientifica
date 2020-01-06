@@ -76,7 +76,7 @@ def crearFicheros(ficheros,ficheroCsv,ficherosJson,tipo):
                     numCluster += 1
                     
         salidajson.close()
-                
+          
                 
     
     salidacsv.close()  

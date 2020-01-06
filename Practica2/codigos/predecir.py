@@ -29,7 +29,6 @@ def centeroidnp(x,y):
 
 def calcular_punto_medio_centroides(centroides, clases):    
  
-    print(centroides)
     arbol = KDTree(np.array(centroides))
     pos_cercano = arbol.query(centroides, k=2, return_distance=False)[:, 1]
     emparejados = list()
@@ -54,6 +53,7 @@ def calcular_punto_medio_centroides(centroides, clases):
             
 def dibujarCluster(svcRBF,cluster):
     plt.clf() 
+    plt.figure(figsize=(10,10))
     puntos = list()
     clases = list()
     for i in cluster:
@@ -74,9 +74,9 @@ def dibujarCluster(svcRBF,cluster):
     centroides, clases_centroides = calcular_punto_medio_centroides(puntos,clases) 
     for i in range(0,len(clases_centroides)):
         if clases_centroides[i] == 1:
-            plt.plot(centroides[i][0],centroides[i][1],'r+')
+            plt.plot(centroides[i][0],centroides[i][1],'g+')
         else:
-            plt.plot(centroides[i][0],centroides[i][1],'b+')
+            plt.plot(centroides[i][0],centroides[i][1],'g+')
     
     plt.show()     
     
@@ -102,7 +102,7 @@ if __name__ == "__main__":
     
     puntosx, puntosy = capturar.obtenerPuntosXY(clientID)
     
-    cluster = agrupar.buscarClusters(4,25,0.05,puntosx,puntosy)
+    cluster = agrupar.buscarClusters(4,20,0.05,puntosx,puntosy)
     
     
     cabecera = ["perimetro","profundiad","anchura","clase"]
