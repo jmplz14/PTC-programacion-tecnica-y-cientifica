@@ -7,239 +7,126 @@
     Leemos datos de laser, los mostramos con matplot y los salvamos a un fichero JSON
     Importante: La escena tiene que estar ejecutándose en el simulador (Usar botón PLAY)
 """
+from joblib import load
 import vrep
-import sys
+import capturar
 import cv2
 import numpy as np
 import time
 import matplotlib.pyplot as plt
 import agrupar
 import caracteristicas
+from sklearn.neighbors import KDTree
+
 
 import pandas as pd
-from sklearn.model_selection import train_test_split 
-from sklearn.svm import SVC
-from sklearn.metrics import accuracy_score
-from sklearn.metrics import classification_report, confusion_matrix
-from sklearn.model_selection import cross_val_score
-from sklearn.preprocessing import MinMaxScaler
-from warnings import simplefilter
-
-def centeroidnp(arr):
-    length = arr.shape[0]
-    sum_x = np.sum(arr[:, 0])
-    sum_y = np.sum(arr[:, 1])
-    return sum_x/length, sum_y/length
 
 
-vrep.simxFinish(-1) #Terminar todas las conexiones
-clientID=vrep.simxStart('127.0.0.1',19999,True,True,5000,5) #Iniciar una nueva conexion en el puerto 19999 (direccion por defecto)
+def centeroidnp(x,y):
+    valores = np.array([x,y])
+    centroide = np.mean(valores, axis=1)
+    return centroide
+
+def calcular_punto_medio_centroides(centroides, clases):    
  
-if clientID!=-1:
-    print ('Conexion establecida')
-else:
-    sys.exit("Error: no se puede conectar. Tienes que iniciar la simulación antes de llamar a este script.") #Terminar este script
- 
-#Guardar la referencia al robot
-
-_, robothandle = vrep.simxGetObjectHandle(clientID, 'Pioneer_p3dx', vrep.simx_opmode_oneshot_wait)
+    print(centroides)
+    arbol = KDTree(np.array(centroides))
+    pos_cercano = arbol.query(centroides, k=2, return_distance=False)[:, 1]
+    emparejados = list()
+    
+    centroide_clusters = list()
+    clases_centroide_clusters = list()
+    
+    for i in range(0,len(centroides)):
         
-#Guardar la referencia de los motores
-_, left_motor_handle=vrep.simxGetObjectHandle(clientID, 'Pioneer_p3dx_leftMotor', vrep.simx_opmode_oneshot_wait)
-_, right_motor_handle=vrep.simxGetObjectHandle(clientID, 'Pioneer_p3dx_rightMotor', vrep.simx_opmode_oneshot_wait)
- 
-#Guardar la referencia de la camara
-_, camhandle = vrep.simxGetObjectHandle(clientID, 'Vision_sensor', vrep.simx_opmode_oneshot_wait)
- 
-#acceder a los datos del laser
-_, datosLaserComp = vrep.simxGetStringSignal(clientID,'LaserData',vrep.simx_opmode_streaming)
-
-
-velocidad = 0.35 #Variable para la velocidad de los motores
- 
-#Iniciar la camara y esperar un segundo para llenar el buffer
-_, resolution, image = vrep.simxGetVisionSensorImage(clientID, camhandle, 0, vrep.simx_opmode_streaming)
-time.sleep(1)
- 
-plt.axis('equal')
-plt.axis([0, 4, -2, 2])    
-
-
-
-#Creamos el fichero JSON para guardar los datos del laser
-#usamos diccionarios
-segundos=1
-
-
-puntosx=[] #listas para recibir las coordenadas x, y z de los puntos detectados por el laser
-puntosy=[]
-puntosz=[]
-returnCode, signalValue = vrep.simxGetStringSignal(clientID,'LaserData',vrep.simx_opmode_buffer) 
-time.sleep(segundos) #esperamos un tiempo para que el ciclo de lectura de datos no sea muy rápido
-datosLaser=vrep.simxUnpackFloats(signalValue)
-for indice in range(0,len(datosLaser),3):
-    puntosx.append(datosLaser[indice+1])
-    puntosy.append(datosLaser[indice+2])
-    puntosz.append(datosLaser[indice])
-         
-
+        cercano = pos_cercano[i]
+        distancia = caracteristicas.distanciaEuclidea(centroides[i],centroides[cercano])
+        
+        if clases[i] == clases[cercano] and cercano not in emparejados and distancia<0.7:
+            punto = centroides[i]
+            emparejados.append(cercano)
+            emparejados.append(i)
+            medio = (punto+centroides[cercano]) / 2
+            centroide_clusters.append(medio)
+            clases_centroide_clusters.append(clases[cercano])
+            
+    return centroide_clusters,clases_centroide_clusters
+            
+def dibujarCluster(svcRBF,cluster):
+    plt.clf() 
+    puntos = list()
+    clases = list()
+    for i in cluster:
+        numPuntos = i[1]-i[0] + 1
+        x = puntosx[i[0]:i[1] + 1]
+        y = puntosy[i[0]:i[1]+1]
+        valores = caracteristicas.obtenerDatos(x,y,numPuntos)
+        centro = centeroidnp(x,y)
+        
+        puntos.append(centro)
+        clase = svcRBF.predict([valores])
+        clases.append(clase)
+        if clase == 1.:
+            plt.plot(x, y, 'r.')
+        else:
+            plt.plot(x, y, 'b.')
+        
+    centroides, clases_centroides = calcular_punto_medio_centroides(puntos,clases) 
+    for i in range(0,len(clases_centroides)):
+        if clases_centroides[i] == 1:
+            plt.plot(centroides[i][0],centroides[i][1],'r+')
+        else:
+            plt.plot(centroides[i][0],centroides[i][1],'b+')
     
-#Guardamos los puntosx, puntosy en el fichero JSON
-#lectura={"PuntosX":puntosx, "PuntosY":puntosy}
-cluster = agrupar.buscarClusters(4,25,0.05,puntosx,puntosy)
-print(len(cluster))
-print(cluster)
-
-
-
-
-
-simplefilter(action='ignore', category=FutureWarning)
-simplefilter(action='ignore', category=DeprecationWarning)
-
-scaler = MinMaxScaler()
-
-
-cabecera = ["perimetro","profundiad","anchura","clase"]
-datos = pd.read_csv("piernasDataset.csv", names=cabecera) 
-#datos[cabecera] = scaler.fit_transform(datos[cabecera])
-
-X = datos.drop('clase', axis=1)  
-"""print(X)
-poly = PolynomialFeatures(degree=3, interaction_only=True)
-poly = pp.PolynomialFeatures(2)
-output_nparray = poly.fit_transform(X)
-target_feature_names = ['x'.join(['{}^{}'.format(pair[0],pair[1]) for pair in tuple if pair[1]!=0]) for tuple in [zip(datos.columns,p) for p in poly.powers_]]
-output_df = pd.DataFrame(output_nparray, columns = target_feature_names)
-X=output_df
-X = output_df"""
-
-y = datos['clase'] 
-
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.20, random_state=8)
-
-print("Clasificación con kernek de base radial con C=1 y gamma=auto")
-
-svcRBF = SVC(kernel='rbf', gamma=0.06, C=10000, random_state=0)
-svcRBF.fit(X_train, y_train)
-
-
-# Con el clasificador obtenido hacemos la predicción sobre el conjunto de test incial
-
-y_pred = svcRBF.predict(X_test)
-
-acc_test=accuracy_score(y_test, y_pred)
-
-print("Acc_test RBF: (TP+TN)/(T+P)  %0.4f" % acc_test)
-
-print("Matriz de confusión Filas: verdad Columnas: predicción")
-'''
- Cij observaciones que son de clase i pero que se predicen a la clase j.
- La suma por filas son los ejemplos reales que hay de cada clase=soporte.
-( TN	FP 
-  FN	TP )
-'''
-
-print(confusion_matrix(y_test, y_pred))
-
-'''
-La precisión mide la capacidad del clasificador en no etiquetar como positivo un ejemplo que es negativo.
-El recall mide la capacidad del clasificador para encontrar todos los ejemplos positivos.
-'''
-
-print("Precision= TP / (TP + FP), Recall= TP / (TP + FN)")
-print("f1-score es la media entre precisión y recall")
-print(classification_report(y_test, y_pred))
-
-#Para asegurarnos de que el resultado no depende del conjunto de test elegido
-#tenemos que realizar validación cruzada
-
-svcRBF2 = SVC(kernel='rbf', gamma='auto')
-
-scores = cross_val_score(svcRBF2, X, y, cv=5)
-
-# exactitud media con intervalo de confositivoianza del 95%
-print("Accuracy 5-cross validation: %0.4f (+/- %0.4f)" % (scores.mean(), scores.std() * 2))
+    plt.show()     
     
-plt.clf() 
-puntos = list()
-for i in cluster:
-    numPuntos = i[1]-i[0] + 1
-    x = puntosx[i[0]:i[1] + 1]
-    y = puntosy[i[0]:i[1]+1]
-    valores = caracteristicas.obtenerDatos(x,y,numPuntos)
-    extremos = np.array([[x[0],y[0]],[x[-1],y[-1]]])
-    centro = centeroidnp(extremos)
-    print(centro)
-    if svcRBF.predict([valores]) == 1.:
-        plt.plot(x, y, 'r.')
-        extremos = np.array([[x[0],x[-1]],[y[0],y[-1]]])
-        centro = centeroidnp(extremos)
-        puntos.append((x[0] + x[-1])/2, (y[0] + y[-1])/2)
-        plt.plot((x[0] + x[-1])/2, (y[0] + y[-1])/2, 'g.')
-    else:
-           
-        plt.plot(x, y, 'b.')
-
-plt.show()
     
-#Guardar frame de la camara, rotarlo y convertirlo a BGR
-_, resolution, image=vrep.simxGetVisionSensorImage(clientID, camhandle, 0, vrep.simx_opmode_buffer)
-img = np.array(image, dtype = np.uint8)
-img.resize([resolution[0], resolution[1], 3])
-img = np.rot90(img,2)
-img = np.fliplr(img)
-img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+if __name__ == "__main__":
+    clientID = capturar.realizarConexion()
 
 
 
-
+        
      
-   
-
-
-#detememos los motores
-vrep.simxSetJointTargetVelocity(clientID, left_motor_handle,0,vrep.simx_opmode_streaming)
-vrep.simxSetJointTargetVelocity(clientID, right_motor_handle,0,vrep.simx_opmode_streaming)
-    
-time.sleep(1)
-
-#detenemos la simulacion
-vrep.simxStopSimulation(clientID,vrep.simx_opmode_oneshot_wait)
-
-#cerramos la conexion
-vrep.simxFinish(clientID)
-
-#cerramos las ventanas
-cv2.destroyAllWindows()
-
-
-
- 
-
-
-
-
-
-'''
-Se pueden ver más métodos en
-http://www.coppeliarobotics.com/helpFiles/en/remoteApiFunctionsMatlab.htm
-
-por ejemplo para ver las velocidades de los motores usar
- 
-velocidadIz=vrep.simxGetObjectVelocity(clientID, left_motor_handle,vrep.simx_opmode_oneshot_wait)
-velocidadDe=vrep.simxGetObjectVelocity(clientID, right_motor_handle,vrep.simx_opmode_oneshot_wait)
-
-print("Velocidad iz: ", velocidadIz, " Velocidad de:", velocidadDe)
-
-orientacionRobot=vrep.simxGetObjectOrientation(clientID, robothandle, 0, vrep.simx_opmode_oneshot_wait)
-
- print(orientacionRobot)
-
-
-'''
-
-
-
+    #acceder a los datos del laser
+    _, datosLaserComp = vrep.simxGetStringSignal(clientID,'LaserData',vrep.simx_opmode_streaming)
+    time.sleep(1)
+     
+    capturar.iniciarGrafica()  
     
     
+    
+    #Creamos el fichero JSON para guardar los datos del laser
+    #usamos diccionarios
+    
+    
+    puntosx, puntosy = capturar.obtenerPuntosXY(clientID)
+    
+    cluster = agrupar.buscarClusters(4,25,0.05,puntosx,puntosy)
+    
+    
+    cabecera = ["perimetro","profundiad","anchura","clase"]
+    datos = pd.read_csv("piernasDataset.csv", names=cabecera) 
+
+    svcRBF = load("modelo.joblib")
+    dibujarCluster(svcRBF,cluster)
+    
+    
+    capturar.detenerSimulacion(clientID)
+        
+    time.sleep(1)
+    
+    #detenemos la simulacion
+    vrep.simxStopSimulation(clientID,vrep.simx_opmode_oneshot_wait)
+    
+    #cerramos la conexion
+    vrep.simxFinish(clientID)
+    
+    #cerramos las ventanas
+    cv2.destroyAllWindows()
+    
+    
+    
+    
+        
+        

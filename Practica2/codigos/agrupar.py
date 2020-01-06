@@ -73,6 +73,8 @@ def crearJson(directorio,nombre):
 if __name__ == "__main__":
     crearJson("nuevoPositivo","clustersPiernas.json")
     crearJson("negativo","clustersNoPiernas.json")
+    
+    
         
         
         
