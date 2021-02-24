@@ -110,7 +110,8 @@ print("Mejoras para linear")
 print("------------------------------------------------------------------------\n")
 mejoraLinear = SVC(kernel='linear', random_state=SEED)  
 
-parametros = { "C": [0.1 ,1, 20 ,30, 10, 100, 1000]}
+parametros = { "C": [0.1 ,1, 20 ,30, 10, 100, 1000],
+"gamma": [0.1,0.5,1,2,3,7,10]}
 gridLinear = {
     "param_grid": parametros,
     "cv": cv,

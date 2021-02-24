@@ -1,0 +1,2 @@
+# PTC(Programación Técnica y Científica)
+Asignatura de la universidad de granada con los siguientes contenidos: Herramientas y lenguajes de alto nivel orientados al cálculo técnico y científico. Representación gráfica y visualización de datos. Prototipado y desarrollo rápido de software técnico y científico. Bibliotecas de software específicas para ingeniería. Resolución de problemas comunes en las ingenierías. Comunicación e integración de software desarrollado en diferentes lenguajes.
